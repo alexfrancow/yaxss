@@ -1,5 +1,4 @@
 import requests
-import mechanize
 import sys
 from selenium import webdriver
 import selenium
@@ -10,7 +9,6 @@ from selenium.webdriver.common.keys import Keys
 import time
 from bs4 import BeautifulSoup
 import re
-import requests
 from selenium.webdriver.chrome.options import Options
 
 
@@ -19,32 +17,20 @@ def getForms():
     url = url[0]
     req = requests.get(url)
     html = req.text
-    soup = BeautifulSoup(html, "html.parser") 
+    soup = BeautifulSoup(html, "html.parser")
     #soup = BeautifulSoup(requests.get(url).content)
+    print ""
     print "INPUT NAMES: "
-    for name in soup.find_all('input'):
+    for name in soup.find_all(['input', 'textarea']):
         print name.get('name')
-
+    print ""
     print "SUBMIT INPUT: "
-    submitInput = soup.find_all('input', attrs={'type':re.compile("submit")})
-    print submitInput
+    for submitInput in soup.find_all('input', attrs={'type':re.compile("submit")}):
+        print submitInput.get('value')
     if submitInput == []:
         print req.text
+    print ""
     onInput()
-
-
-def findXss():
-    try:
-        WebDriverWait(driver, 3).until(EC.alert_is_present(),
-                                'Timed out waiting for PA creation ' +
-                                'confirmation popup to appear.')
-        alert = driver.switch_to_alert
-        alert.accept()
-        print "XSS Found:" + line
-    except TimeoutException:
-        print "No XSS " + line
-        driver.quit()
-        pass
 
 
 def onInput():
@@ -56,7 +42,7 @@ def onInput():
     options = webdriver.ChromeOptions()
     options.add_argument('--disable-xss-auditor')
     driver = webdriver.Chrome(desired_capabilities=options.to_capabilities())
-    for line in lst:    
+    for line in lst:
         try:
             driver.get(url)
             field = driver.find_element_by_name(inputName)
@@ -88,7 +74,7 @@ def onInput():
         except UnexpectedAlertPresentException:
             print "XSS Found: " + line
             break
-                
+
     print "This web is vulnerable to XSS"
 
 
@@ -118,8 +104,8 @@ def main():
     if len (sys.argv) != 2:
         print "Enter the URL: python xss.py URL"
         sys.exit(1)
-    
-    selection = raw_input("On input[i] or on url[u]: " )
+
+    selection = raw_input("On input[i] or on url[u]: ")
     if selection == "i":
         getForms()
     elif selection == "u":
